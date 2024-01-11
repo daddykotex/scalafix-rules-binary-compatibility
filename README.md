@@ -1,0 +1,1 @@
+# scalafix-rules-binary-compatibility
