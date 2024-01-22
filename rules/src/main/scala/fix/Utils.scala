@@ -3,8 +3,27 @@ package fix
 import scalafix.v1._
 import scala.meta._
 import java.nio.file.Path
+import scala.collection.immutable
 
 object Utils {
+
+  object pkg {
+    def find(tree: Tree): Option[String] = {
+      def go(ps: List[Pkg], acc: List[String]): List[String] = {
+        ps match {
+          case p :: rest =>
+            val others = p.stats.collect { case pp: Pkg => pp }
+            go(rest ++ others, acc :+ p.ref.toString())
+          case Nil =>
+            acc
+        }
+      }
+
+      tree.collect { case p: Pkg =>
+        go(List(p), List.empty).mkString(".")
+      }.headOption
+    }
+  }
   object caseClass {
     def unapply(defn: Tree): Option[Defn.Class] =
       defn match {
