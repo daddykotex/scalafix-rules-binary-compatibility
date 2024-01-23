@@ -92,13 +92,15 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
   private def generateUnapply(cc: Defn.Class): String = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
-    val types = nameTypes.map(_._2.toString()).mkString(", ")
-    val returnType = s"Option[($types)]"
+    val rtypeList = nameTypes.map(_._2.toString())
+    val rType = if (rtypeList.isEmpty) "Unit" else rtypeList.mkString("(", ", ", ")")
+    val returnType = s"Option[$rType]"
 
-    val values = nameTypes.map(nt => s"c.${Utils.sanitizeName(nt._1)}").mkString(", ")
-    val returnValue = s"Some($values)"
-    s"""|  private def unapply(c: ${cc.name.value}): $returnType = {
-        |    $returnValue
+    val rValueList = nameTypes.map(nt => s"c.${Utils.sanitizeName(nt._1)}")
+    val rValue = if (rValueList.isEmpty) "Some(())" else s"Some(${rValueList.mkString(", ")})"
+    val typeParams = cc.tparamClause.toString()
+    s"""|  private def unapply$typeParams(c: ${cc.name.value}${typeParams}): $returnType = {
+        |    $rValue
         |  }
         |""".stripMargin
 
