@@ -49,4 +49,6 @@ object CaseClassExtractorVisibilityWithObjectAndPrivateUnapply {
 }
 
 trait SomeTrait[A] {}
-final case class NoMatch[A]() extends SomeTrait[A]
+final case class SomeTraitImplA[A]() extends SomeTrait[A]
+final case class SomeTraitImplBPlus[+B]() extends SomeTrait[Any]
+final case class SomeTraitImplBMinus[-B]() extends SomeTrait[Any]

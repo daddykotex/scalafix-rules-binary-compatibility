@@ -98,7 +98,11 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
 
     val rValueList = nameTypes.map(nt => s"c.${Utils.sanitizeName(nt._1)}")
     val rValue = if (rValueList.isEmpty) "Some(())" else s"Some(${rValueList.mkString(", ")})"
-    val typeParams = cc.tparamClause.toString()
+    val typeParams = cc.tparamClause.copy(values =
+      cc.tparamClause.values.map(p =>
+        p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
+      )
+    )
     s"""|  private def unapply$typeParams(c: ${cc.name.value}${typeParams}): $returnType = {
         |    $rValue
         |  }
