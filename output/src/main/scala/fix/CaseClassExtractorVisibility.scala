@@ -1,7 +1,6 @@
 package fix
 
 final case class CaseClassExtractorVisibility(name: String)
-
 object CaseClassExtractorVisibility {
   private def unapply(c: CaseClassExtractorVisibility): Option[(String)] = {
     Some(c.name)
@@ -10,7 +9,6 @@ object CaseClassExtractorVisibility {
 }
 
 final case class CaseClassExtractorVisibilityParamsCheck(age: Int, `type`: String)
-
 object CaseClassExtractorVisibilityParamsCheck {
   private def unapply(c: CaseClassExtractorVisibilityParamsCheck): Option[(Int, String)] = {
     Some((c.age, c.`type`))
@@ -18,17 +16,7 @@ object CaseClassExtractorVisibilityParamsCheck {
 
 }
 
-final case class CaseClassExtractorVisibilityWithObject(name: String)
-
-object CaseClassExtractorVisibilityWithObject {
-  private def unapply(c: CaseClassExtractorVisibilityWithObject): Option[(String)] = {
-    Some(c.name)
-  }
-
-}
-
 final case class CaseClassExtractorVisibilityWithEmptyObject(name: String)
-
 object CaseClassExtractorVisibilityWithEmptyObject {
   private def unapply(c: CaseClassExtractorVisibilityWithEmptyObject): Option[(String)] = {
     Some(c.name)
@@ -37,7 +25,6 @@ object CaseClassExtractorVisibilityWithEmptyObject {
 }
 
 final case class CaseClassExtractorVisibilityWithOtherContent(name: String)
-
 object CaseClassExtractorVisibilityWithOtherContent {
 
   /** some comment
@@ -75,7 +62,6 @@ object CaseClassExtractorVisibilityWithObjectAndPrivateUnapply {
 
 trait SomeTrait[A] {}
 final case class SomeTraitImplA[A]() extends SomeTrait[A]
-
 object SomeTraitImplA {
   private def unapply[A](c: SomeTraitImplA[A]): Option[Unit] = {
     Some(())
@@ -83,7 +69,6 @@ object SomeTraitImplA {
 
 }
 final case class SomeTraitImplBPlus[+B]() extends SomeTrait[Any]
-
 object SomeTraitImplBPlus {
   private def unapply[B](c: SomeTraitImplBPlus[B]): Option[Unit] = {
     Some(())
@@ -91,7 +76,6 @@ object SomeTraitImplBPlus {
 
 }
 final case class SomeTraitImplBMinus[-B]() extends SomeTrait[Any]
-
 object SomeTraitImplBMinus {
   private def unapply[B](c: SomeTraitImplBMinus[B]): Option[Unit] = {
     Some(())

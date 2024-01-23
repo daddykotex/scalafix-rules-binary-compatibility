@@ -4,19 +4,15 @@ rule = CaseClassExtractorVisibility
 package fix
 
 final case class CaseClassExtractorVisibility(name: String)
+object CaseClassExtractorVisibility {}
 
 final case class CaseClassExtractorVisibilityParamsCheck(age: Int, `type`: String)
-
-final case class CaseClassExtractorVisibilityWithObject(name: String)
-
-object CaseClassExtractorVisibilityWithObject {}
+object CaseClassExtractorVisibilityParamsCheck {}
 
 final case class CaseClassExtractorVisibilityWithEmptyObject(name: String)
-
 object CaseClassExtractorVisibilityWithEmptyObject
 
 final case class CaseClassExtractorVisibilityWithOtherContent(name: String)
-
 object CaseClassExtractorVisibilityWithOtherContent {
 
   /** some comment
@@ -50,5 +46,8 @@ object CaseClassExtractorVisibilityWithObjectAndPrivateUnapply {
 
 trait SomeTrait[A] {}
 final case class SomeTraitImplA[A]() extends SomeTrait[A]
+object SomeTraitImplA {}
 final case class SomeTraitImplBPlus[+B]() extends SomeTrait[Any]
+object SomeTraitImplBPlus {}
 final case class SomeTraitImplBMinus[-B]() extends SomeTrait[Any]
+object SomeTraitImplBMinus {}

@@ -39,9 +39,7 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
     val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
     val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
     val patches = caseClassesWithObjects.map {
-      case (cc, None) =>
-        // no object
-        Patch.addRight(cc, "\n\n" + generateObjectAndUnapply(cc))
+      case (cc, None) => Patch.empty
       case (cc, Some(obj)) => {
         // object exists
         val unapplyM = Utils.companion.findUnapplyMethod(obj)
@@ -80,13 +78,6 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
       case Some(value) =>
         Patch.addLeft(value, generatedUnapply)
     }
-  }
-
-  private def generateObjectAndUnapply(cc: Defn.Class): String = {
-    val generatedUnapply = generateUnapply(cc)
-    s"""|object ${cc.name.value} {
-        |$generatedUnapply
-        |}""".stripMargin
   }
 
   private def generateUnapply(cc: Defn.Class): String = {
