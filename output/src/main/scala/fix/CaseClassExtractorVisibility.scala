@@ -13,7 +13,7 @@ final case class CaseClassExtractorVisibilityParamsCheck(age: Int, `type`: Strin
 
 object CaseClassExtractorVisibilityParamsCheck {
   private def unapply(c: CaseClassExtractorVisibilityParamsCheck): Option[(Int, String)] = {
-    Some(c.age, c.`type`)
+    Some((c.age, c.`type`))
   }
 
 }
