@@ -1,20 +1,21 @@
 package fix
 
 import metaconfig.ConfDecoder
+import metaconfig.Configured
 import metaconfig.generic.Surface
 import scalafix.v1._
 
 import scala.meta._
-import metaconfig.Configured
 
 case class CaseClassCtorVisibilityConfig(
     excludedPackages: List[String] = List.empty
 ) {
   private val pkgsRegex = excludedPackages.map(_.r)
 
-  def shouldExclude(pkg: String): Boolean =
+  def shouldExclude(pkg: String): Boolean = {
     if (pkgsRegex.isEmpty) false
     else pkgsRegex.exists(_.findFirstMatchIn(pkg).isDefined)
+  }
 }
 object CaseClassCtorVisibilityConfig {
   val default = CaseClassCtorVisibilityConfig()
@@ -57,5 +58,6 @@ class CaseClassCtorVisibility(config: CaseClassCtorVisibilityConfig) extends Sem
   }
 
   private def addPrivateModToConstructor(c: Defn.Class): Patch =
-    Patch.addRight(c.name, " private ")
+    if (c.tparamClause.isEmpty) Patch.addRight(c.name, " private ")
+    else Patch.addRight(c.tparamClause, " private ")
 }
