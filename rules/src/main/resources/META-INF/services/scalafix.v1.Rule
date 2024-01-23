@@ -1,3 +1,4 @@
 fix.CaseClassCtorVisibility
 fix.CaseClassExtractorVisibility
 fix.CaseClassAddCompanionObject
+fix.CaseClassAddWithMethods
