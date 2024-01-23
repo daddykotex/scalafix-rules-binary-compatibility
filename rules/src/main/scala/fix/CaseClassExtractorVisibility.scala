@@ -1,9 +1,40 @@
 package fix
 
+import metaconfig.ConfDecoder
+import metaconfig.Configured
+import metaconfig.generic.Surface
 import scalafix.v1._
+
 import scala.meta._
 
-class CaseClassExtractorVisibility extends SemanticRule("CaseClassExtractorVisibility") {
+case class CaseClassExtractorVisibilityConfig(
+    excludedPackages: List[String] = List.empty
+) {
+  private val pkgsRegex = excludedPackages.map(_.r)
+
+  def shouldExclude(pkg: String): Boolean = {
+    val debug = pkgsRegex.map(r => pkg -> r.findFirstMatchIn(pkg)).mkString
+    if (pkgsRegex.isEmpty) false
+    else pkgsRegex.exists(_.findFirstMatchIn(pkg).isDefined)
+  }
+}
+object CaseClassExtractorVisibilityConfig {
+  val default = CaseClassExtractorVisibilityConfig()
+  implicit val surface: Surface[CaseClassExtractorVisibilityConfig] =
+    metaconfig.generic.deriveSurface[CaseClassExtractorVisibilityConfig]
+  implicit val decoder: ConfDecoder[fix.CaseClassExtractorVisibilityConfig] =
+    metaconfig.generic.deriveDecoder(default)
+}
+
+class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
+    extends SemanticRule("CaseClassExtractorVisibility") {
+  def this() = this(CaseClassExtractorVisibilityConfig.default)
+
+  override def withConfiguration(config: Configuration): Configured[Rule] =
+    config.conf
+      .getOrElse("CaseClassExtractorVisibility")(this.config)
+      .map { newConfig => new CaseClassExtractorVisibility(newConfig) }
+
   override def fix(implicit doc: SemanticDocument): Patch = {
     val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
     val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
@@ -29,7 +60,7 @@ class CaseClassExtractorVisibility extends SemanticRule("CaseClassExtractorVisib
   }
 
   private def addPrivateUnapply(d: Defn.Object, cc: Defn.Class): Patch = {
-    val generatedUnapply = generateUnapply(cc, indent = 2)
+    val generatedUnapply = generateUnapply(cc)
     d.templ.stats.headOption match {
       // body is empty `object Thing` or `object Thing {}`
       case None if d.templ.pos.isEmpty =>
@@ -52,13 +83,13 @@ class CaseClassExtractorVisibility extends SemanticRule("CaseClassExtractorVisib
   }
 
   private def generateObjectAndUnapply(cc: Defn.Class): String = {
-    val generatedUnapply = generateUnapply(cc, indent = 2)
+    val generatedUnapply = generateUnapply(cc)
     s"""|object ${cc.name.value} {
         |$generatedUnapply
         |}""".stripMargin
   }
 
-  private def generateUnapply(cc: Defn.Class, indent: Int): String = {
+  private def generateUnapply(cc: Defn.Class): String = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
     val types = nameTypes.map(_._2.toString()).mkString(", ")
@@ -68,7 +99,8 @@ class CaseClassExtractorVisibility extends SemanticRule("CaseClassExtractorVisib
     val returnValue = s"Some($values)"
     s"""|  private def unapply(c: ${cc.name.value}): $returnType = {
         |    $returnValue
-        |  }""".stripMargin
+        |  }
+        |""".stripMargin
 
   }
 }

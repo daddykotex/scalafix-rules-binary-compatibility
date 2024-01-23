@@ -6,6 +6,7 @@ object CaseClassExtractorVisibility {
   private def unapply(c: CaseClassExtractorVisibility): Option[(String)] = {
     Some(c.name)
   }
+
 }
 
 final case class CaseClassExtractorVisibilityParamsCheck(age: Int, `type`: String)
@@ -14,6 +15,7 @@ object CaseClassExtractorVisibilityParamsCheck {
   private def unapply(c: CaseClassExtractorVisibilityParamsCheck): Option[(Int, String)] = {
     Some(c.age, c.`type`)
   }
+
 }
 
 final case class CaseClassExtractorVisibilityWithObject(name: String)
@@ -22,6 +24,7 @@ object CaseClassExtractorVisibilityWithObject {
   private def unapply(c: CaseClassExtractorVisibilityWithObject): Option[(String)] = {
     Some(c.name)
   }
+
 }
 
 final case class CaseClassExtractorVisibilityWithEmptyObject(name: String)
@@ -30,6 +33,28 @@ object CaseClassExtractorVisibilityWithEmptyObject {
   private def unapply(c: CaseClassExtractorVisibilityWithEmptyObject): Option[(String)] = {
     Some(c.name)
   }
+
+}
+
+final case class CaseClassExtractorVisibilityWithOtherContent(name: String)
+
+object CaseClassExtractorVisibilityWithOtherContent {
+
+  /** some comment
+    */
+    private def unapply(c: CaseClassExtractorVisibilityWithOtherContent): Option[(String)] = {
+    Some(c.name)
+  }
+def something(): Unit = ()
+}
+
+final case class CaseClassExtractorVisibilityWithComment(name: String)
+
+object CaseClassExtractorVisibilityWithComment {
+  private def unapply(c: CaseClassExtractorVisibilityWithComment): Option[(String)] = {
+    Some(c.name)
+  }
+
 }
 
 final case class CaseClassExtractorVisibilityWithObjectAndPublicUnapply(name: String)

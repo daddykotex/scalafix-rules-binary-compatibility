@@ -15,6 +15,23 @@ final case class CaseClassExtractorVisibilityWithEmptyObject(name: String)
 
 object CaseClassExtractorVisibilityWithEmptyObject
 
+final case class CaseClassExtractorVisibilityWithOtherContent(name: String)
+
+object CaseClassExtractorVisibilityWithOtherContent {
+
+  /** some comment
+    */
+  def something(): Unit = ()
+}
+
+final case class CaseClassExtractorVisibilityWithComment(name: String)
+
+object CaseClassExtractorVisibilityWithComment {
+
+  /** some comment
+    */
+}
+
 final case class CaseClassExtractorVisibilityWithObjectAndPublicUnapply(name: String)
 
 object CaseClassExtractorVisibilityWithObjectAndPublicUnapply {
