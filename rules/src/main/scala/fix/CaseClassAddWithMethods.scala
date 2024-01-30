@@ -72,7 +72,7 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
     nameTypes
       .map { case (name, tpe) =>
         val capName = capitalize(name.value)
-        s"""|def with$capName(value: $tpe) {
+        s"""|def with$capName(value: $tpe) = {
             |  copy($name = value)
             |}
             |""".stripMargin
