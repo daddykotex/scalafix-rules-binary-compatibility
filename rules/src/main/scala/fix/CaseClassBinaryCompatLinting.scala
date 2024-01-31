@@ -1,12 +1,24 @@
 package fix
 
+import metaconfig.ConfDecoder
+import metaconfig.Configured
+import metaconfig.generic.Surface
 import scalafix.v1._
+
 import scala.meta._
 
 /** Ensures case class abide by the rules described in:
   * https://docs.scala-lang.org/overviews/core/binary-compatibility-for-library-authors.html#changing-a-case-class-definition-in-a-backwards-compatible-manner
   */
-class CaseClassBinaryCompatLintingRule() extends SemanticRule("CaseClassBinaryCompatLintingRule") {
+class CaseClassBinaryCompatLinting(config: CaseClassBinaryCompatLintingConfig)
+    extends SemanticRule("CaseClassBinaryCompatLinting") {
+  def this() = this(CaseClassBinaryCompatLintingConfig.default)
+
+  override def withConfiguration(config: Configuration): Configured[Rule] =
+    config.conf
+      .getOrElse("CaseClassBinaryCompatLinting")(this.config)
+      .map { newConfig => new CaseClassBinaryCompatLinting(newConfig) }
+
   def isConstructorPrivate(cc: Defn.Class): Boolean =
     cc.ctor.mods.exists(_.is[Mod.Private])
 
@@ -88,4 +100,24 @@ class CaseClassBinaryCompatLintingRule() extends SemanticRule("CaseClassBinaryCo
     }
   }
 
+}
+
+case class CaseClassBinaryCompatLintingConfig(
+    excludedPackages: List[String] = List.empty
+) {
+  private val pkgsRegex = excludedPackages.map(_.r)
+
+  def shouldExclude(pkg: String): Boolean = {
+    val debug = pkgsRegex.map(r => pkg -> r.findFirstMatchIn(pkg)).mkString
+    if (pkgsRegex.isEmpty) false
+    else pkgsRegex.exists(_.findFirstMatchIn(pkg).isDefined)
+  }
+}
+
+object CaseClassBinaryCompatLintingConfig {
+  val default = CaseClassBinaryCompatLintingConfig()
+  implicit val surface: Surface[CaseClassBinaryCompatLintingConfig] =
+    metaconfig.generic.deriveSurface[CaseClassBinaryCompatLintingConfig]
+  implicit val decoder: ConfDecoder[fix.CaseClassBinaryCompatLintingConfig] =
+    metaconfig.generic.deriveDecoder(default)
 }
