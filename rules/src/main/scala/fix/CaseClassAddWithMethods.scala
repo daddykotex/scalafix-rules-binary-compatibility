@@ -35,12 +35,16 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
       .map { newConfig => new CaseClassAddWithMethods(newConfig) }
 
   override def fix(implicit doc: SemanticDocument): Patch = {
-    val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
-    val patches = caseClasses.map { cc =>
-      val withMethods = generateWithMethods(cc)
-      addMethods(withMethods, cc)
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
+    if (exclude) Patch.empty
+    else {
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
+      val patches = caseClasses.map { cc =>
+        val withMethods = generateWithMethods(cc)
+        addMethods(withMethods, cc)
+      }
+      Patch.fromIterable(patches)
     }
-    Patch.fromIterable(patches)
   }
 
   private def addMethods(methods: Seq[String], clazz: Defn.Class): Patch = {

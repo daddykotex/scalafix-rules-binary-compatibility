@@ -36,25 +36,29 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
       .map { newConfig => new CaseClassExtractorVisibility(newConfig) }
 
   override def fix(implicit doc: SemanticDocument): Patch = {
-    val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
-    val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
-    val patches = caseClassesWithObjects.map {
-      case (cc, None) => Patch.empty
-      case (cc, Some(obj)) => {
-        // object exists
-        val unapplyM = Utils.companion.findUnapplyMethod(obj)
-        unapplyM match {
-          // no unapply
-          case None =>
-            addPrivateUnapply(obj, cc)
-          // an unapply is already defined, we don't change it
-          case Some(_) =>
-            Patch.empty
-        }
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
+    if (exclude) Patch.empty
+    else {
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
+      val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
+      val patches = caseClassesWithObjects.map {
+        case (cc, None) => Patch.empty
+        case (cc, Some(obj)) => {
+          // object exists
+          val unapplyM = Utils.companion.findUnapplyMethod(obj)
+          unapplyM match {
+            // no unapply
+            case None =>
+              addPrivateUnapply(obj, cc)
+            // an unapply is already defined, we don't change it
+            case Some(_) =>
+              Patch.empty
+          }
 
+        }
       }
+      Patch.fromIterable(patches)
     }
-    Patch.fromIterable(patches)
   }
 
   private def addPrivateUnapply(d: Defn.Object, cc: Defn.Class): Patch = {

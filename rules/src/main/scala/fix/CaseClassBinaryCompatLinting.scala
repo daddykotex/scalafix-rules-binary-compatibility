@@ -29,21 +29,26 @@ class CaseClassBinaryCompatLinting(config: CaseClassBinaryCompatLintingConfig)
     ddef.mods.exists(_.is[Mod.Private])
 
   override def fix(implicit doc: SemanticDocument): Patch = {
-    val nonPrivateCaseClasses: Seq[Defn.Class] = doc.tree.collect {
-      case Utils.caseClass(cc) if !isClassPrivate(cc) => cc
-    }
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
 
-    Patch.fromIterable(
-      nonPrivateCaseClasses.flatMap { cc =>
-        val p1 = lintPrivateConstructor(cc)
-
-        val obj = Utils.companion.findCompanionObject(doc.tree)(cc)
-        val p2 = lintCompanionObject(obj)(cc)
-        val p3 = lintPrivateUnapply(obj)(cc)
-
-        Seq(p1, p2, p3)
+    if (exclude) Patch.empty
+    else {
+      val nonPrivateCaseClasses: Seq[Defn.Class] = doc.tree.collect {
+        case Utils.caseClass(cc) if !isClassPrivate(cc) => cc
       }
-    )
+
+      Patch.fromIterable(
+        nonPrivateCaseClasses.flatMap { cc =>
+          val p1 = lintPrivateConstructor(cc)
+
+          val obj = Utils.companion.findCompanionObject(doc.tree)(cc)
+          val p2 = lintCompanionObject(obj)(cc)
+          val p3 = lintPrivateUnapply(obj)(cc)
+
+          Seq(p1, p2, p3)
+        }
+      )
+    }
   }
 
   private def lintPrivateConstructor(cc: Defn.Class): Patch = {

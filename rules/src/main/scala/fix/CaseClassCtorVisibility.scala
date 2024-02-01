@@ -40,11 +40,9 @@ class CaseClassCtorVisibility(config: CaseClassCtorVisibilityConfig) extends Sem
       cc.ctor.mods.exists(Utils.mod.isPrivateOrProtected) ||
         cc.mods.exists(Utils.mod.isPrivateOrProtected)
 
-    val currentPackage = Utils.pkg.find(doc.tree)
-
-    val shouldRun = currentPackage.isEmpty || !currentPackage.exists(config.shouldExclude)
-
-    if (shouldRun) {
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
+    if (exclude) Patch.empty
+    else {
       val patches = doc.tree.collect {
         case Utils.caseClass(cc) if !hasVisibilityMods(cc) =>
           addPrivateModToConstructor(cc)
@@ -52,8 +50,6 @@ class CaseClassCtorVisibility(config: CaseClassCtorVisibilityConfig) extends Sem
           Patch.empty
       }
       Patch.fromIterable(patches)
-    } else {
-      Patch.empty
     }
   }
 
