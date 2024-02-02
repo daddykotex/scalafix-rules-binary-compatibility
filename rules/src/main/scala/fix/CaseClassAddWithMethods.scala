@@ -73,10 +73,15 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
   private def generateWithMethods(cc: Defn.Class): Seq[String] = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
+    val typeParams = cc.tparamClause.copy(values =
+      cc.tparamClause.values.map(p =>
+        p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
+      )
+    )
     nameTypes
       .map { case (name, tpe) =>
         val capName = capitalize(name.value)
-        s"""|def with$capName(value: $tpe) = {
+        s"""|def with$capName(value: $tpe): ${cc.name.value}${typeParams} = {
             |  copy($name = value)
             |}
             |""".stripMargin
