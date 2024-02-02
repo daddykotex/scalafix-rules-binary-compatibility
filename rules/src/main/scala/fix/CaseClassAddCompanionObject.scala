@@ -39,7 +39,7 @@ class CaseClassAddCompanionObject(config: CaseClassAddCompanionObjectConfig)
     val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
     if (exclude) Patch.empty
     else {
-      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) if !cc.mods.exists(_.is[Mod.Private]) => cc }
       val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
       val patches = caseClassesWithObjects.map {
         case (cc, None) =>

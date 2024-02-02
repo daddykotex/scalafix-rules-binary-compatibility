@@ -38,7 +38,7 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
     val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
     if (exclude) Patch.empty
     else {
-      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) if !cc.mods.exists(_.is[Mod.Private]) => cc }
       val patches = caseClasses.map { cc =>
         val withMethods = generateWithMethods(cc)
         addMethods(withMethods, cc)
