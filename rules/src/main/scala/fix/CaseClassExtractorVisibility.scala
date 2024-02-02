@@ -62,7 +62,7 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
   }
 
   private def addPrivateUnapply(d: Defn.Object, cc: Defn.Class): Patch = {
-    val generatedUnapply = generateUnapply(cc)
+    val generatedUnapply = generateSimpleUnapply(cc)
     d.templ.stats.headOption match {
       // body is empty `object Thing` or `object Thing {}`
       case None if d.templ.pos.isEmpty =>
@@ -82,6 +82,18 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
       case Some(value) =>
         Patch.addLeft(value, generatedUnapply)
     }
+  }
+
+  private def generateSimpleUnapply(cc: Defn.Class): String = {
+    val typeParams = cc.tparamClause.copy(values =
+      cc.tparamClause.values.map(p =>
+        p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
+      )
+    )
+    s"""|  @scala.annotation.nowarn("msg=private method unapply in object ${cc.name} is never used")
+        |  private def unapply$typeParams(c: ${cc.name}${typeParams}): Option[${cc.name}${typeParams}] = Some(c)
+        |  """.stripMargin
+
   }
 
   private def generateUnapply(cc: Defn.Class): String = {
