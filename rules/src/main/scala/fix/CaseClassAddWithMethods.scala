@@ -59,9 +59,9 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
               |}""".stripMargin
         )
       case None =>
-        Patch.replaceTree(
-          clazz.templ,
-          s"""|{
+        Patch.addRight(
+          clazz.templ.inits.lastOption.getOrElse(clazz.templ),
+          s"""| {
               |$code
               |}""".stripMargin
         )
