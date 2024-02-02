@@ -86,13 +86,8 @@ class CaseClassAddApplyMethod(config: CaseClassAddApplyMethodConfig) extends Sem
   private def generateApply(cc: Defn.Class): String = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
-    val params =
-      if (nameTypes.isEmpty) "Unit"
-      else nameTypes.map { case (name, typ) => s"$name: $typ" }.mkString(",")
-
-    val args =
-      if (nameTypes.isEmpty) "()"
-      else nameTypes.map(_._1).mkString(", ")
+    val params = nameTypes.map { case (name, typ) => s"$name: $typ" }.mkString(",")
+    val args = nameTypes.map(_._1).mkString(", ")
 
     val typeParams = cc.tparamClause.copy(values =
       cc.tparamClause.values.map(p =>

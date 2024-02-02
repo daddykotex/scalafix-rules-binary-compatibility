@@ -15,3 +15,11 @@ object CaseClassAddApplyMethod2 {
   }
 def someOtherMethod() = 1
 }
+
+final case class CaseClassAddApplyMethod3[A]()
+object CaseClassAddApplyMethod3 {
+  def apply[A](): CaseClassAddApplyMethod3[A] = {
+    new CaseClassAddApplyMethod3()
+  }
+
+}
