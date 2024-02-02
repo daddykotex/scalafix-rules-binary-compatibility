@@ -2,3 +2,5 @@ fix.CaseClassCtorVisibility
 fix.CaseClassExtractorVisibility
 fix.CaseClassAddCompanionObject
 fix.CaseClassAddWithMethods
+fix.CaseClassAddApplyMethod
+fix.CaseClassBinaryCompatLinting

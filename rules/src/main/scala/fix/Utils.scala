@@ -50,11 +50,15 @@ object Utils {
 
     def createWithUnapply(c: Defn.Class): Patch = Patch.empty
 
-    def findUnapplyMethod(obj: Defn.Object): Option[Defn.Def] =
+    private def findMethod(obj: Defn.Object, name: String): Option[Defn.Def] =
       obj.templ.stats.collectFirst {
-        case m: Defn.Def if m.name.value == "unapply" =>
+        case m: Defn.Def if m.name.value == name =>
           m
       }
+
+    def findUnapplyMethod(obj: Defn.Object): Option[Defn.Def] = findMethod(obj, "unapply")
+
+    def findApplyMethod(obj: Defn.Object): Option[Defn.Def] = findMethod(obj, "apply")
   }
 
   def sanitizeName(name: Name): String = {

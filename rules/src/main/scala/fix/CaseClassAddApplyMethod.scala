@@ -7,7 +7,7 @@ import scalafix.v1._
 
 import scala.meta._
 
-case class CaseClassExtractorVisibilityConfig(
+case class CaseClassAddApplyMethodConfig(
     excludedPackages: List[String] = List.empty
 ) {
   private val pkgsRegex = excludedPackages.map(_.r)
@@ -18,22 +18,21 @@ case class CaseClassExtractorVisibilityConfig(
     else pkgsRegex.exists(_.findFirstMatchIn(pkg).isDefined)
   }
 }
-object CaseClassExtractorVisibilityConfig {
-  val default = CaseClassExtractorVisibilityConfig()
-  implicit val surface: Surface[CaseClassExtractorVisibilityConfig] =
-    metaconfig.generic.deriveSurface[CaseClassExtractorVisibilityConfig]
-  implicit val decoder: ConfDecoder[fix.CaseClassExtractorVisibilityConfig] =
+object CaseClassAddApplyMethodConfig {
+  val default = CaseClassAddApplyMethodConfig()
+  implicit val surface: Surface[CaseClassAddApplyMethodConfig] =
+    metaconfig.generic.deriveSurface[CaseClassAddApplyMethodConfig]
+  implicit val decoder: ConfDecoder[fix.CaseClassAddApplyMethodConfig] =
     metaconfig.generic.deriveDecoder(default)
 }
 
-class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
-    extends SemanticRule("CaseClassExtractorVisibility") {
-  def this() = this(CaseClassExtractorVisibilityConfig.default)
+class CaseClassAddApplyMethod(config: CaseClassAddApplyMethodConfig) extends SemanticRule("CaseClassAddApplyMethod") {
+  def this() = this(CaseClassAddApplyMethodConfig.default)
 
   override def withConfiguration(config: Configuration): Configured[Rule] =
     config.conf
-      .getOrElse("CaseClassExtractorVisibility")(this.config)
-      .map { newConfig => new CaseClassExtractorVisibility(newConfig) }
+      .getOrElse("CaseClassAddApplyMethod")(this.config)
+      .map { newConfig => new CaseClassAddApplyMethod(newConfig) }
 
   override def fix(implicit doc: SemanticDocument): Patch = {
     val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
@@ -45,11 +44,11 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
         case (cc, None) => Patch.empty
         case (cc, Some(obj)) => {
           // object exists
-          val unapplyM = Utils.companion.findUnapplyMethod(obj)
+          val unapplyM = Utils.companion.findApplyMethod(obj)
           unapplyM match {
             // no unapply
             case None =>
-              addPrivateUnapply(obj, cc)
+              addApply(obj, cc)
             // an unapply is already defined, we don't change it
             case Some(_) =>
               Patch.empty
@@ -61,8 +60,8 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
     }
   }
 
-  private def addPrivateUnapply(d: Defn.Object, cc: Defn.Class): Patch = {
-    val generatedUnapply = generateSimpleUnapply(cc)
+  private def addApply(d: Defn.Object, cc: Defn.Class): Patch = {
+    val generatedUnapply = generateApply(cc)
     d.templ.stats.headOption match {
       // body is empty `object Thing` or `object Thing {}`
       case None if d.templ.pos.isEmpty =>
@@ -84,40 +83,19 @@ class CaseClassExtractorVisibility(config: CaseClassExtractorVisibilityConfig)
     }
   }
 
-  private def generateSimpleUnapply(cc: Defn.Class): String = {
-    val typeParams = cc.tparamClause.copy(values =
-      cc.tparamClause.values.map(p =>
-        p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
-      )
-    )
-    s"""|  @scala.annotation.nowarn("msg=private method unapply in object ${cc.name} is never used")
-        |  private def unapply$typeParams(c: ${cc.name}${typeParams}): Option[${cc.name}${typeParams}] = Some(c)
-        |  """.stripMargin
-
-  }
-
-  private def generateUnapply(cc: Defn.Class): String = {
+  private def generateApply(cc: Defn.Class): String = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
-    val rtypeList = nameTypes.map(_._2.toString())
-    val rType = if (rtypeList.isEmpty) "Unit" else rtypeList.mkString("(", ", ", ")")
-    val returnType = s"Option[$rType]"
+    val params = nameTypes.map { case (name, typ) => s"$name: $typ" }.mkString(",")
+    val args = nameTypes.map(_._1).mkString(", ")
 
-    val rValueList = nameTypes.map(nt => s"c.${Utils.sanitizeName(nt._1)}")
-    val rValue =
-      if (rValueList.isEmpty) "Some(())"
-      else {
-        val values = rValueList.mkString(", ")
-        if (rValueList.size > 1) s"Some(($values))"
-        else s"Some($values)"
-      }
     val typeParams = cc.tparamClause.copy(values =
       cc.tparamClause.values.map(p =>
         p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
       )
     )
-    s"""|  private def unapply$typeParams(c: ${cc.name.value}${typeParams}): $returnType = {
-        |    $rValue
+    s"""|  def apply$typeParams($params): ${cc.name}${typeParams} = {
+        |    new ${cc.name}($args)
         |  }
         |""".stripMargin
 

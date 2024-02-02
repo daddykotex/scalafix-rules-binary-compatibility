@@ -36,15 +36,19 @@ class CaseClassAddCompanionObject(config: CaseClassAddCompanionObjectConfig)
       .map { newConfig => new CaseClassAddCompanionObject(newConfig) }
 
   override def fix(implicit doc: SemanticDocument): Patch = {
-    val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
-    val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
-    val patches = caseClassesWithObjects.map {
-      case (cc, None) =>
-        // no object
-        Patch.addRight(cc, "\n\n" + generateEmptyObject(cc))
-      case (_, _) => Patch.empty
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
+    if (exclude) Patch.empty
+    else {
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) if !cc.mods.exists(_.is[Mod.Private]) => cc }
+      val caseClassesWithObjects = caseClasses.map(c => c -> Utils.companion.findCompanionObject(doc.tree)(c))
+      val patches = caseClassesWithObjects.map {
+        case (cc, None) =>
+          // no object
+          Patch.addRight(cc, "\n\n" + generateEmptyObject(cc))
+        case (_, _) => Patch.empty
+      }
+      Patch.fromIterable(patches)
     }
-    Patch.fromIterable(patches)
   }
 
   private def generateEmptyObject(cc: Defn.Class): String = {

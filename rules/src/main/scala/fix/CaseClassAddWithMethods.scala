@@ -35,12 +35,16 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
       .map { newConfig => new CaseClassAddWithMethods(newConfig) }
 
   override def fix(implicit doc: SemanticDocument): Patch = {
-    val caseClasses = doc.tree.collect { case Utils.caseClass(cc) => cc }
-    val patches = caseClasses.map { cc =>
-      val withMethods = generateWithMethods(cc)
-      addMethods(withMethods, cc)
+    val exclude = Utils.pkg.find(doc.tree).exists(config.shouldExclude)
+    if (exclude) Patch.empty
+    else {
+      val caseClasses = doc.tree.collect { case Utils.caseClass(cc) if !cc.mods.exists(_.is[Mod.Private]) => cc }
+      val patches = caseClasses.map { cc =>
+        val withMethods = generateWithMethods(cc)
+        addMethods(withMethods, cc)
+      }
+      Patch.fromIterable(patches)
     }
-    Patch.fromIterable(patches)
   }
 
   private def addMethods(methods: Seq[String], clazz: Defn.Class): Patch = {
@@ -55,9 +59,9 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
               |}""".stripMargin
         )
       case None =>
-        Patch.replaceTree(
-          clazz.templ,
-          s"""|{
+        Patch.addRight(
+          clazz.templ.inits.lastOption.getOrElse(clazz.templ),
+          s"""| {
               |$code
               |}""".stripMargin
         )
@@ -69,10 +73,15 @@ class CaseClassAddWithMethods(config: CaseClassAddWithMethodsConfig) extends Sem
   private def generateWithMethods(cc: Defn.Class): Seq[String] = {
     val nameTypes = cc.ctor.paramClauses.flatMap(c => c.values).map(p => p.name -> p.decltpe.get)
 
+    val typeParams = cc.tparamClause.copy(values =
+      cc.tparamClause.values.map(p =>
+        p.copy(mods = p.mods.filterNot(_.is[Mod.Covariant]).filterNot(_.is[Mod.Contravariant]))
+      )
+    )
     nameTypes
       .map { case (name, tpe) =>
         val capName = capitalize(name.value)
-        s"""|def with$capName(value: $tpe) = {
+        s"""|def with$capName(value: $tpe): ${cc.name.value}${typeParams} = {
             |  copy($name = value)
             |}
             |""".stripMargin

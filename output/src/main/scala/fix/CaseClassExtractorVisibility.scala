@@ -2,26 +2,23 @@ package fix
 
 final case class CaseClassExtractorVisibility(name: String)
 object CaseClassExtractorVisibility {
-  private def unapply(c: CaseClassExtractorVisibility): Option[(String)] = {
-    Some(c.name)
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object CaseClassExtractorVisibility is never used")
+  private def unapply(c: CaseClassExtractorVisibility): Option[CaseClassExtractorVisibility] = Some(c)
+  
 }
 
 final case class CaseClassExtractorVisibilityParamsCheck(age: Int, `type`: String)
 object CaseClassExtractorVisibilityParamsCheck {
-  private def unapply(c: CaseClassExtractorVisibilityParamsCheck): Option[(Int, String)] = {
-    Some((c.age, c.`type`))
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object CaseClassExtractorVisibilityParamsCheck is never used")
+  private def unapply(c: CaseClassExtractorVisibilityParamsCheck): Option[CaseClassExtractorVisibilityParamsCheck] = Some(c)
+  
 }
 
 final case class CaseClassExtractorVisibilityWithEmptyObject(name: String)
 object CaseClassExtractorVisibilityWithEmptyObject {
-  private def unapply(c: CaseClassExtractorVisibilityWithEmptyObject): Option[(String)] = {
-    Some(c.name)
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object CaseClassExtractorVisibilityWithEmptyObject is never used")
+  private def unapply(c: CaseClassExtractorVisibilityWithEmptyObject): Option[CaseClassExtractorVisibilityWithEmptyObject] = Some(c)
+  
 }
 
 final case class CaseClassExtractorVisibilityWithOtherContent(name: String)
@@ -29,19 +26,17 @@ object CaseClassExtractorVisibilityWithOtherContent {
 
   /** some comment
     */
-    private def unapply(c: CaseClassExtractorVisibilityWithOtherContent): Option[(String)] = {
-    Some(c.name)
-  }
-def something(): Unit = ()
+    @scala.annotation.nowarn("msg=private method unapply in object CaseClassExtractorVisibilityWithOtherContent is never used")
+  private def unapply(c: CaseClassExtractorVisibilityWithOtherContent): Option[CaseClassExtractorVisibilityWithOtherContent] = Some(c)
+  def something(): Unit = ()
 }
 
 final case class CaseClassExtractorVisibilityWithComment(name: String)
 
 object CaseClassExtractorVisibilityWithComment {
-  private def unapply(c: CaseClassExtractorVisibilityWithComment): Option[(String)] = {
-    Some(c.name)
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object CaseClassExtractorVisibilityWithComment is never used")
+  private def unapply(c: CaseClassExtractorVisibilityWithComment): Option[CaseClassExtractorVisibilityWithComment] = Some(c)
+  
 }
 
 final case class CaseClassExtractorVisibilityWithObjectAndPublicUnapply(name: String)
@@ -63,22 +58,19 @@ object CaseClassExtractorVisibilityWithObjectAndPrivateUnapply {
 trait SomeTrait[A] {}
 final case class SomeTraitImplA[A]() extends SomeTrait[A]
 object SomeTraitImplA {
-  private def unapply[A](c: SomeTraitImplA[A]): Option[Unit] = {
-    Some(())
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object SomeTraitImplA is never used")
+  private def unapply[A](c: SomeTraitImplA[A]): Option[SomeTraitImplA[A]] = Some(c)
+  
 }
 final case class SomeTraitImplBPlus[+B]() extends SomeTrait[Any]
 object SomeTraitImplBPlus {
-  private def unapply[B](c: SomeTraitImplBPlus[B]): Option[Unit] = {
-    Some(())
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object SomeTraitImplBPlus is never used")
+  private def unapply[B](c: SomeTraitImplBPlus[B]): Option[SomeTraitImplBPlus[B]] = Some(c)
+  
 }
 final case class SomeTraitImplBMinus[-B]() extends SomeTrait[Any]
 object SomeTraitImplBMinus {
-  private def unapply[B](c: SomeTraitImplBMinus[B]): Option[Unit] = {
-    Some(())
-  }
-
+  @scala.annotation.nowarn("msg=private method unapply in object SomeTraitImplBMinus is never used")
+  private def unapply[B](c: SomeTraitImplBMinus[B]): Option[SomeTraitImplBMinus[B]] = Some(c)
+  
 }
